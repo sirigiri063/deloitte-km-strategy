@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Deloitte KM Strategy — Analytics Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  /* ── Reset & Base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy:      #1E2761;
+    --navy-mid:  #162050;
+    --navy-light:#263580;
+    --ice:       #CADCFC;
+    --ice-light: #E8F0FE;
+    --green:     #00C49A;
+    --green-dk:  #008F72;
+    --amber:     #F5A623;
+    --red:       #E84040;
+    --slate:     #64748B;
+    --slate-lt:  #94A3B8;
+    --white:     #FFFFFF;
+    --bg:        #F0F2F8;
+    --card:      #FFFFFF;
+    --border:    #E2E8F0;
+    --text:      #1A1F36;
+    --text-muted:#64748B;
+  }
+
+  html { font-size: 14px; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── Top Bar ── */
+  .topbar {
+    background: var(--navy);
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    height: 52px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  }
+  .topbar-left { display: flex; align-items: center; gap: 14px; }
+  .topbar-logo {
+    width: 28px; height: 28px;
+    background: var(--green);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 13px; color: var(--navy);
+    letter-spacing: -0.5px;
+  }
+  .topbar-title { font-size: 14px; font-weight: 600; letter-spacing: 0.2px; }
+  .topbar-sub { font-size: 11px; color: var(--ice); opacity: 0.75; margin-top: 1px; }
+  .topbar-right { display: flex; align-items: center; gap: 20px; }
+  .topbar-badge {
+    background: var(--green);
+    color: var(--navy);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .topbar-date { font-size: 11px; color: var(--ice); opacity: 0.65; }
+
+  /* ── Tab Nav ── */
+  .tabnav {
+    background: var(--navy-mid);
+    display: flex;
+    padding: 0 24px;
+    gap: 2px;
+    border-bottom: 2px solid var(--navy-light);
+  }
+  .tab {
+    padding: 10px 18px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ice);
+    opacity: 0.65;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: opacity 0.15s, border-color 0.15s;
+    user-select: none;
+    letter-spacing: 0.2px;
+  }
+  .tab:hover { opacity: 0.9; }
+  .tab.active { opacity: 1; border-bottom-color: var(--green); color: var(--white); font-weight: 600; }
+
+  /* ── Page ── */
+  .page { display: none; padding: 20px 22px 28px; }
+  .page.active { display: block; }
+
+  /* ── Section Headers ── */
+  .section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--slate);
+    margin-bottom: 10px;
+  }
+
+  /* ── KPI Row ── */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  .kpi-card {
+    background: var(--card);
+    border-radius: 8px;
+    padding: 16px 18px 14px;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    position: relative;
+    overflow: hidden;
+  }
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .kpi-card.green::before  { background: var(--green); }
+  .kpi-card.amber::before  { background: var(--amber); }
+  .kpi-card.red::before    { background: var(--red); }
+  .kpi-card.navy::before   { background: var(--navy); }
+  .kpi-label { font-size: 11px; color: var(--text-muted); font-weight: 500; margin-bottom: 6px; }
+  .kpi-value { font-size: 28px; font-weight: 700; line-height: 1; margin-bottom: 4px; }
+  .kpi-card.green .kpi-value { color: var(--green-dk); }
+  .kpi-card.amber .kpi-value { color: var(--amber); }
+  .kpi-card.red   .kpi-value { color: var(--red); }
+  .kpi-card.navy  .kpi-value { color: var(--navy); }
+  .kpi-delta { font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+  .delta-up   { color: var(--green-dk); font-weight: 600; }
+  .delta-down { color: var(--red); font-weight: 600; }
+  .kpi-src { font-size: 9px; color: var(--slate-lt); margin-top: 6px; font-style: italic; }
+
+  /* ── Chart Grid ── */
+  .chart-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  .chart-grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  .chart-grid-32 {
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  .chart-grid-23 {
+    display: grid;
+    grid-template-columns: 2fr 3fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  /* ── Chart Card ── */
+  .chart-card {
+    background: var(--card);
+    border-radius: 8px;
+    padding: 16px;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .card-title { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.3; }
+  .card-sub   { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+  .card-badge {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+  .badge-green { background: #D1FAF0; color: var(--green-dk); }
+  .badge-amber { background: #FEF3D7; color: #B87A00; }
+  .badge-red   { background: #FEE2E2; color: #B91C1C; }
+  .badge-navy  { background: var(--ice-light); color: var(--navy); }
+
+  .chart-wrap { position: relative; }
+  .chart-wrap canvas { max-width: 100%; }
+
+  /* ── Table ── */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .data-table th {
+    background: var(--ice-light);
+    color: var(--navy);
+    font-weight: 700;
+    font-size: 11px;
+    padding: 8px 10px;
+    text-align: left;
+    border-bottom: 2px solid var(--border);
+    letter-spacing: 0.2px;
+  }
+  .data-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: middle;
+  }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: #F8FAFE; }
+  .td-bold { font-weight: 700; }
+  .td-green { color: var(--green-dk); font-weight: 700; }
+  .td-amber { color: #B87A00; font-weight: 700; }
+  .td-red   { color: var(--red); font-weight: 700; }
+  .td-navy  { color: var(--navy); font-weight: 700; }
+
+  /* Progress bar inline */
+  .prog-wrap { display: flex; align-items: center; gap: 8px; }
+  .prog-bar  { flex: 1; height: 7px; background: var(--border); border-radius: 4px; overflow: hidden; }
+  .prog-fill { height: 100%; border-radius: 4px; }
+  .prog-num  { font-size: 11px; font-weight: 600; width: 34px; text-align: right; color: var(--text-muted); }
+
+  /* ── Insight Callout ── */
+  .insight-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .insight-card {
+    background: var(--navy);
+    color: var(--white);
+    border-radius: 8px;
+    padding: 14px 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .insight-card.light {
+    background: var(--ice-light);
+    color: var(--text);
+  }
+  .insight-icon { font-size: 20px; margin-bottom: 6px; }
+  .insight-stat { font-size: 26px; font-weight: 700; color: var(--green); line-height: 1; margin-bottom: 4px; }
+  .insight-card.light .insight-stat { color: var(--navy); }
+  .insight-text { font-size: 11px; line-height: 1.45; opacity: 0.88; }
+  .insight-src  { font-size: 9px; opacity: 0.55; margin-top: 6px; font-style: italic; }
+
+  /* ── Footer ── */
+  .dash-footer {
+    margin-top: 8px;
+    padding: 10px 0 0;
+    border-top: 1px solid var(--border);
+    font-size: 10px;
+    color: var(--slate-lt);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* ── Roadmap Timeline ── */
+  .timeline { position: relative; padding: 0 0 0 22px; }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 7px; top: 8px; bottom: 8px;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--green), var(--amber), var(--navy-light));
+  }
+  .tl-item { position: relative; margin-bottom: 16px; }
+  .tl-dot {
+    position: absolute;
+    left: -18px; top: 4px;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    border: 2px solid var(--white);
+    box-shadow: 0 0 0 2px currentColor;
+  }
+  .tl-dot.green  { background: var(--green);  color: var(--green); }
+  .tl-dot.amber  { background: var(--amber);  color: var(--amber); }
+  .tl-dot.navy   { background: var(--navy-light); color: var(--navy-light); }
+  .tl-phase  { font-size: 9px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 2px; }
+  .tl-phase.green { color: var(--green-dk); }
+  .tl-phase.amber { color: #B87A00; }
+  .tl-phase.navy  { color: var(--navy); }
+  .tl-title  { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+  .tl-desc   { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+  .tl-kpi    { display: inline-block; margin-top: 5px; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 3px; }
+  .tl-kpi.green { background: #D1FAF0; color: var(--green-dk); }
+  .tl-kpi.amber { background: #FEF3D7; color: #B87A00; }
+  .tl-kpi.navy  { background: var(--ice-light); color: var(--navy); }
+
+  /* ── Sentiment Tags ── */
+  .sentiment-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .sent-tag {
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+  .sent-pos { background: #D1FAF0; color: var(--green-dk); }
+  .sent-neg { background: #FEE2E2; color: #B91C1C; }
+  .sent-neu { background: var(--ice-light); color: var(--navy); }
+
+  /* ── Highlight Number ── */
+  .highlight-num {
+    font-size: 42px;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--navy);
+  }
+  .highlight-num span { color: var(--green); }
+</style>
+</head>
+<body>
+
+<!-- ── Top Bar ── -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-logo">DL</div>
+    <div>
+      <div class="topbar-title">Deloitte KM Strategy — Analytics Dashboard</div>
+      <div class="topbar-sub">Enhancing Consultant Productivity Through AI-Powered Knowledge Management</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="topbar-badge">Live Report</div>
+    <div class="topbar-date">Data as of 2025–2026</div>
+  </div>
+</div>
+
+<!-- ── Tab Nav ── -->
+<div class="tabnav">
+  <div class="tab active" onclick="switchTab('overview')">📊 Overview</div>
+  <div class="tab" onclick="switchTab('competitor')">🏢 Competitor Analysis</div>
+  <div class="tab" onclick="switchTab('sentiment')">💬 Employee Sentiment</div>
+  <div class="tab" onclick="switchTab('roadmap')">🗺 Roadmap & Impact</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE 1 — OVERVIEW
+══════════════════════════════════════════ -->
+<div class="page active" id="page-overview">
+
+  <!-- KPI Row -->
+  <div class="kpi-row" style="margin-top:18px;">
+    <div class="kpi-card green">
+      <div class="kpi-label">Consultant Time on Non-Value Work</div>
+      <div class="kpi-value">41%</div>
+      <div class="kpi-delta"><span class="delta-down">▲ Opportunity to recapture</span></div>
+      <div class="kpi-src">Deloitte Productivity Report 2024 · 800 workers surveyed</div>
+    </div>
+    <div class="kpi-card navy">
+      <div class="kpi-label">PairD Rollout — % of Global Workforce</div>
+      <div class="kpi-value">19%</div>
+      <div class="kpi-delta"><span style="color:var(--slate)">75K of ~390K employees</span></div>
+      <div class="kpi-src">Deloitte Official · October 2023</div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-label">AI Skills Gap — #1 Integration Barrier</div>
+      <div class="kpi-value">68%</div>
+      <div class="kpi-delta"><span class="delta-down">▲ of firms cite skills as top barrier</span></div>
+      <div class="kpi-src">Deloitte Survey · 3,235 leaders · 24 countries</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-label">Firms Truly Reimagining With AI</div>
+      <div class="kpi-value">34%</div>
+      <div class="kpi-delta"><span class="delta-down">▼ 66% surface-level only</span></div>
+      <div class="kpi-src">Deloitte State of AI 2025</div>
+    </div>
+  </div>
+
+  <div class="chart-grid-32">
+    <!-- Readiness radar / bar -->
+    <div class="chart-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Deloitte AI Readiness by Category</div>
+          <div class="card-sub">% readiness score — all figures from Deloitte Insights 2026</div>
+        </div>
+        <span class="card-badge badge-navy">Deloitte Internal</span>
+      </div>
+      <div class="chart-wrap"><canvas id="readinessChart" height="220"></canvas></div>
+    </div>
+
+    <!-- Market opportunity donut -->
+    <div class="chart-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">AI Adoption Stage — Global Firms</div>
+          <div class="card-sub">Deloitte State of AI 2025 · n = 3,235 leaders</div>
+        </div>
+        <span class="card-badge badge-amber">Market Context</span>
+      </div>
+      <div class="chart-wrap"><canvas id="adoptionDonut" height="220"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-grid-2">
+    <!-- AI investment timeline -->
+    <div class="chart-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">AI Investment Growth — Big 4 Firms (2022–2025)</div>
+          <div class="card-sub">Cumulative investment in AI platforms & upskilling ($B)</div>
+        </div>
+        <span class="card-badge badge-green">Trend</span>
+      </div>
+      <div class="chart-wrap"><canvas id="investmentLine" height="200"></canvas></div>
+    </div>
+
+    <!-- Productivity benchmark bar -->
+    <div class="chart-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Productivity Impact of AI KM Systems</div>
+          <div class="card-sub">Expected gains vs current baseline — industry benchmarks</div>
+        </div>
+        <span class="card-badge badge-green">Opportunity</span>
+      </div>
+      <div class="chart-wrap"><canvas id="productivityBar" height="200"></canvas></div>
+    </div>
+  </div>
+
+  <div class="dash-footer">
+    <span>Sources: Deloitte Insights 2026 · Deloitte State of AI 2025 · McKinsey State of AI 2025 · Accenture Research 2024</span>
+    <span>Strategic Analysis Project · Page 1 of 4</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE 2 — COMPETITOR ANALYSIS
+══════════════════════════════════════════ -->
+<div class="page" id="page-competitor">
+
+  <div class="insight-row" style="margin-top:18px;">
+    <div class="insight-card">
+      <div class="insight-icon">🤖</div>
+      <div class="insight-stat">550K</div>
+      <div class="insight-text">Accenture employees trained in GenAI — out of 780,000 total workforce (71%). Weekly usage monitored; linked to promotion.</div>
+      <div class="insight-src">Accenture Workforce Report 2024 · HR Katha</div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-icon">💬</div>
+      <div class="insight-stat">200K</div>
+      <div class="insight-text">PwC employees on ChatPwC globally. 3,000+ internal GenAI use cases identified. Forrester Wave Leader Q2 2026.</div>
+      <div class="insight-src">PwC Official · Forrester Wave Q2 2026</div>
+    </div>
+    <div class="insight-card light">
+      <div class="insight-icon">⚡</div>
+      <div class="insight-stat" style="color:var(--red)">7×</div>
+      <div class="insight-text">Gap between Deloitte's trained workforce (75K EU) and Accenture (550K global). This is the central gap this project addresses.</div>
+      <div class="insight-src">Comparative analysis · Days 1–2 research</div>
+    </div>
+  </div>
+
+  <div class="chart-grid-2">
+    <div class="chart-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Employees Trained in AI — Competitor Comparison</div>
+          <div class="card-sub">Absolute numbers · 2024–2025 data</div>
+        </div>
+        <span class="card-badge badge-red">Gap Analysis</span>
+      </div>
+      <div class="chart-wrap"><canvas id="trainedBar" height="230"></canvas></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">AI Investment Comparison ($B)</div>
+          <div class="card-sub">Total announced AI investment · 2024–2026</div>
+        </div>
+        <span class="card-badge badge-navy">Investment</span>
+      </div>
+      <div class="chart-wrap"><canvas id="investBar" height="230"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-card" style="margin-bottom:14px;">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Competitor Feature Matrix — AI Knowledge Management</div>
+        <div class="card-sub">Comparative assessment across 6 dimensions · 2025–2026</div>
+      </div>
+      <span class="card-badge badge-navy">Benchmark</span>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Dimension</th>
+          <th>Deloitte</th>
+          <th>Accenture</th>
+          <th>PwC</th>
+          <th>McKinsey</th>
+          <th>Score Gap</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="td-bold">Internal AI Platform</td>
+          <td><span class="td-amber">PairD (EU only)</span></td>
+          <td class="td-green">AI Refinery (global)</td>
+          <td class="td-green">ChatPwC (200K users)</td>
+          <td class="td-green">Lilli (500K queries/mo)</td>
+          <td>
+            <div class="prog-wrap">
+              <div class="prog-bar"><div class="prog-fill" style="width:45%;background:var(--amber)"></div></div>
+              <div class="prog-num">45%</div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="td-bold">Workforce AI Training</td>
+          <td><span class="td-red">75K / ~390K (19%)</span></td>
+          <td class="td-green">550K / 780K (71%)</td>
+          <td class="td-green">200K globally</td>
+          <td class="td-amber">70% active users</td>
+          <td>
+            <div class="prog-wrap">
+              <div class="prog-bar"><div class="prog-fill" style="width:19%;background:var(--red)"></div></div>
+              <div class="prog-num">19%</div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="td-bold">KM Platform Maturity</td>
+          <td><span class="td-amber">Moderate</span></td>
+          <td class="td-green">4-Pillar (Agents, KM, Models, Gov)</td>
+          <td class="td-green">3,000+ use cases mapped</td>
+          <td class="td-green">30% search time saved</td>
+          <td>
+            <div class="prog-wrap">
+              <div class="prog-bar"><div class="prog-fill" style="width:40%;background:var(--amber)"></div></div>
+              <div class="prog-num">40%</div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="td-bold">Upskilling Programme</td>
+          <td><span class="td-amber">In progress</span></td>
+          <td class="td-green">LearnVantage ($1B unit)</td>
+          <td class="td-green">GenAI Ambassadors (all depts)</td>
+          <td class="td-green">Structured capability builds</td>
+          <td>
+            <div class="prog-wrap">
+              <div class="prog-bar"><div class="prog-fill" style="width:30%;background:var(--amber)"></div></div>
+              <div class="prog-num">30%</div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="td-bold">Industry Recognition</td>
+          <td><span class="td-amber">Growing</span></td>
+          <td class="td-green">Gartner MQ Leader</td>
+          <td class="td-green">Forrester Wave Leader 2026</td>
+          <td class="td-green">McKinsey Global Institute</td>
+          <td>
+            <div class="prog-wrap">
+              <div class="prog-bar"><div class="prog-fill" style="width:50%;background:var(--amber)"></div></div>
+              <div class="prog-num">50%</div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="td-bold">AI Revenue Impact Claimed</td>
+          <td><span class="td-navy">$4B investment</span></td>
+          <td class="td-green">2.5× revenue growth</td>
+          <td class="td-green">Client Zero model</td>
+          <td class="td-green">5%+ EBIT improvement</td>
+          <td>
+            <div class="prog-wrap">
+              <div class="prog-bar"><div class="prog-fill" style="width:60%;background:var(--navy-light)"></div></div>
+              <div class="prog-num">60%</div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="dash-footer">
+    <span>Sources: Accenture Official · PwC Official · Klover · HR Katha · Futureofconsulting · McKinsey Global Institute</span>
+    <span>Strategic Analysis Project · Page 2 of 4</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE 3 — EMPLOYEE SENTIMENT
+══════════════════════════════════════════ -->
+<div class="page" id="page-sentiment">
+
+  <div class="kpi-row" style="margin-top:18px;">
+    <div class="kpi-card green">
+      <div class="kpi-label">Glassdoor Rating — Deloitte</div>
+      <div class="kpi-value">3.9<span style="font-size:16px;color:var(--slate)">/5</span></div>
+      <div class="kpi-delta"><span class="delta-up">⭐ Industry average: 3.7</span></div>
+      <div class="kpi-src">Glassdoor 2024–2025 aggregate</div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-label">Work-Life Balance Score</div>
+      <div class="kpi-value">3.2<span style="font-size:16px;color:var(--slate)">/5</span></div>
+      <div class="kpi-delta"><span class="delta-down">▼ Common attrition driver</span></div>
+      <div class="kpi-src">Glassdoor reviews analysis</div>
+    </div>
+    <div class="kpi-card navy">
+      <div class="kpi-label">% Reviews Mentioning "Tools / Technology"</div>
+      <div class="kpi-value">34%</div>
+      <div class="kpi-delta">Both positive and negative contexts</div>
+      <div class="kpi-src">Glassdoor / Reddit analysis · 2024</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-label">Knowledge Sharing Pain — % Negative Mentions</div>
+      <div class="kpi-value">28%</div>
+      <div class="kpi-delta"><span class="delta-down">▼ Siloed knowledge a recurring theme</span></div>
+      <div class="kpi-src">Employee review analysis</div>
+    </div>
+  </div>
+
+  <div class="chart-grid-32">
+    <div class="chart-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Employee Sentiment by Category — Deloitte</div>
+          <div class="card-sub">Positive vs negative review distribution · Glassdoor 2024–2025</div>
+        </div>
+        <span class="card-badge badge-amber">Sentiment</span>
+      </div>
+      <div class="chart-wrap"><canvas id="sentimentBar" height="220"></canvas></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Top Themes in Reviews</div>
+          <div class="card-sub">Most cited topics in Glassdoor & Reddit posts</div>
+        </div>
+        <span class="card-badge badge-navy">Themes</span>
+      </div>
+      <div style="padding: 6px 0;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div style="font-size:12px;font-weight:600;color:var(--text)">Career Growth Opportunities</div>
+          <div class="prog-wrap" style="width:55%;">
+            <div class="prog-bar"><div class="prog-fill" style="width:72%;background:var(--green)"></div></div>
+            <div class="prog-num" style="color:var(--green-dk)">72%</div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div style="font-size:12px;font-weight:600;color:var(--text)">Brand & Client Prestige</div>
+          <div class="prog-wrap" style="width:55%;">
+            <div class="prog-bar"><div class="prog-fill" style="width:68%;background:var(--green)"></div></div>
+            <div class="prog-num" style="color:var(--green-dk)">68%</div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div style="font-size:12px;font-weight:600;color:var(--text)">Work-Life Balance Concerns</div>
+          <div class="prog-wrap" style="width:55%;">
+            <div class="prog-bar"><div class="prog-fill" style="width:61%;background:var(--red)"></div></div>
+            <div class="prog-num" style="color:var(--red)">61%</div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div style="font-size:12px;font-weight:600;color:var(--text)">Internal Tools Friction</div>
+          <div class="prog-wrap" style="width:55%;">
+            <div class="prog-bar"><div class="prog-fill" style="width:44%;background:var(--amber)"></div></div>
+            <div class="prog-num" style="color:#B87A00">44%</div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div style="font-size:12px;font-weight:600;color:var(--text)">Knowledge Silos / Poor Sharing</div>
+          <div class="prog-wrap" style="width:55%;">
+            <div class="prog-bar"><div class="prog-fill" style="width:38%;background:var(--red)"></div></div>
+            <div class="prog-num" style="color:var(--red)">38%</div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div style="font-size:12px;font-weight:600;color:var(--text)">AI & Innovation Excitement</div>
+          <div class="prog-wrap" style="width:55%;">
+            <div class="prog-bar"><div class="prog-fill" style="width:55%;background:var(--green)"></div></div>
+            <div class="prog-num" style="color:var(--green-dk)">55%</div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-size:12px;font-weight:600;color:var(--text)">Unclear Career Pathways</div>
+          <div class="prog-wrap" style="width:55%;">
+            <div class="prog-bar"><div class="prog-fill" style="width:33%;background:var(--amber)"></div></div>
+            <div class="prog-num" style="color:#B87A00">33%</div>
+          </div>
+        </div>
+
+        <div style="margin-top:14px; border-top:1px solid var(--border); padding-top:10px;">
+          <div class="section-label" style="margin-bottom:6px;">Common Review Themes</div>
+          <div class="sentiment-row">
+            <span class="sent-tag sent-pos">Prestige brand</span>
+            <span class="sent-tag sent-pos">Smart colleagues</span>
+            <span class="sent-tag sent-pos">Learning budget</span>
+            <span class="sent-tag sent-neg">Long hours</span>
+            <span class="sent-tag sent-neg">Knowledge hoarding</span>
+            <span class="sent-tag sent-neg">Siloed teams</span>
+            <span class="sent-tag sent-neu">AI tools (PairD)</span>
+            <span class="sent-tag sent-neg">Info hard to find</span>
+            <span class="sent-tag sent-pos">Good exit options</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="chart-grid-2">
+    <div class="chart-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Deloitte Glassdoor Ratings Over Time</div>
+          <div class="card-sub">Overall rating trend 2021–2025</div>
+        </div>
+        <span class="card-badge badge-green">Trend</span>
+      </div>
+      <div class="chart-wrap"><canvas id="ratingLine" height="190"></canvas></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Attrition Risk Factors — Ranked</div>
+          <div class="card-sub">Relative weight of attrition drivers at Deloitte</div>
+        </div>
+        <span class="card-badge badge-red">Risk</span>
+      </div>
+      <div class="chart-wrap"><canvas id="attritionBar" height="190"></canvas></div>
+    </div>
+  </div>
+
+  <div class="dash-footer">
+    <span>Sources: Glassdoor aggregate 2024–2025 · Reddit r/consulting · Deloitte Human Capital Trends 2025</span>
+    <span>Strategic Analysis Project · Page 3 of 4</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE 4 — ROADMAP & IMPACT
+══════════════════════════════════════════ -->
+<div class="page" id="page-roadmap">
+
+  <div class="chart-grid-23" style="margin-top:18px;">
+    <!-- Timeline -->
+    <div class="chart-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Implementation Roadmap</div>
+          <div class="card-sub">3-phase execution plan — Months 1 through Year 3</div>
+        </div>
+        <span class="card-badge badge-navy">3 Phases</span>
+      </div>
+      <div class="timeline">
+        <div class="tl-item">
+          <div class="tl-dot green"></div>
+          <div class="tl-phase green">Phase 1 · Month 1</div>
+          <div class="tl-title">PairD Global Audit</div>
+          <div class="tl-desc">CTO commissions full usage audit across all European offices. Baseline KPI established. Owner: CTO.</div>
+          <span class="tl-kpi green">KPI: Usage baseline set</span>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot green"></div>
+          <div class="tl-phase green">Phase 1 · Month 2–3</div>
+          <div class="tl-title">AI Onboarding Rollout — All Regions</div>
+          <div class="tl-desc">Structured onboarding programme deployed globally. Regional MDs own 90% completion target within 90 days.</div>
+          <span class="tl-kpi green">KPI: 90% completion rate</span>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot amber"></div>
+          <div class="tl-phase amber">Phase 2 · Month 5–7</div>
+          <div class="tl-title">Deloitte Knowledge Hub Launch</div>
+          <div class="tl-desc">AI-powered universal search + centralised repository replacing siloed office systems. AI Institute leads delivery.</div>
+          <span class="tl-kpi amber">KPI: 35% search time reduction</span>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot amber"></div>
+          <div class="tl-phase amber">Phase 2 · Month 10–12</div>
+          <div class="tl-title">Share & Connect Platform</div>
+          <div class="tl-desc">Peer knowledge-sharing network. Replaces email threads with structured knowledge exchanges. KM Lead owns rollout.</div>
+          <span class="tl-kpi amber">KPI: 95% satisfaction score</span>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot navy"></div>
+          <div class="tl-phase navy">Phase 3 · Year 1</div>
+          <div class="tl-title">Deloitte LearnAI Unit Launch</div>
+          <div class="tl-desc">Dedicated AI upskilling unit modelled on Accenture LearnVantage. CLO leads. All consultants on personalised pathways.</div>
+          <span class="tl-kpi navy">KPI: 100% certified by Year 2</span>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot navy"></div>
+          <div class="tl-phase navy">Phase 3 · Year 2–3</div>
+          <div class="tl-title">AI Coaching Agents Deployed</div>
+          <div class="tl-desc">Personalised AI coaches per consultant role. Promotion criteria formally linked to AI fluency. CHRO owns programme.</div>
+          <span class="tl-kpi navy">KPI: 5%+ EBIT improvement</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Impact charts -->
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div class="chart-card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Expected Impact by Phase</div>
+            <div class="card-sub">Productivity recovery potential per phase</div>
+          </div>
+          <span class="card-badge badge-green">Impact</span>
+        </div>
+        <div class="chart-wrap"><canvas id="impactBar" height="180"></canvas></div>
+      </div>
+
+      <div class="chart-card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Deloitte vs Target State — Trained Workforce %</div>
+            <div class="card-sub">Current → Phase 3 target vs competitor benchmark</div>
+          </div>
+          <span class="card-badge badge-amber">Progress</span>
+        </div>
+        <div class="chart-wrap"><canvas id="progressBar" height="180"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary metric row -->
+  <div class="kpi-row">
+    <div class="kpi-card green">
+      <div class="kpi-label">Time Saved — Knowledge Search</div>
+      <div class="kpi-value">35%</div>
+      <div class="kpi-delta"><span class="delta-up">▲ McKinsey Lilli benchmark</span></div>
+      <div class="kpi-src">McKinsey KM Research 2025</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">Non-Value Workday Recaptured</div>
+      <div class="kpi-value">41%</div>
+      <div class="kpi-delta"><span class="delta-up">▲ Deloitte internal target</span></div>
+      <div class="kpi-src">Deloitte Productivity Report 2024</div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-label">Workforce Training Gap Closed</div>
+      <div class="kpi-value">7×</div>
+      <div class="kpi-delta">vs Accenture by Phase 3</div>
+      <div class="kpi-src">Comparative analysis · Day 2</div>
+    </div>
+    <div class="kpi-card navy">
+      <div class="kpi-label">EBIT Impact — AI High Performers</div>
+      <div class="kpi-value">5%+</div>
+      <div class="kpi-delta"><span class="delta-up">▲ Phase 3 target</span></div>
+      <div class="kpi-src">McKinsey State of AI 2025</div>
+    </div>
+  </div>
+
+  <div class="dash-footer">
+    <span>Sources: McKinsey State of AI 2025 · Deloitte Insights 2026 · Accenture Workforce Data 2024</span>
+    <span>Strategic Analysis Project · Page 4 of 4</span>
+  </div>
+</div>
+
+<script>
+/* ── Helpers ── */
+const navy    = '#1E2761';
+const navyL   = '#263580';
+const ice     = '#CADCFC';
+const iceL    = '#E8F0FE';
+const green   = '#00C49A';
+const greenDk = '#008F72';
+const amber   = '#F5A623';
+const red     = '#E84040';
+const slate   = '#94A3B8';
+
+const gridColor = 'rgba(100,116,139,0.12)';
+
+const baseOpts = {
+  responsive: true,
+  plugins: {
+    legend: { labels: { font: { family: "'Segoe UI', Arial, sans-serif", size: 11 }, color: '#1A1F36', boxWidth: 12, padding: 14 } },
+    tooltip: { titleFont: { size: 12 }, bodyFont: { size: 11 }, cornerRadius: 6, padding: 10 }
+  },
+  scales: {
+    x: { grid: { color: gridColor }, ticks: { font: { size: 11, family: "'Segoe UI', Arial, sans-serif" }, color: '#64748B' } },
+    y: { grid: { color: gridColor }, ticks: { font: { size: 11, family: "'Segoe UI', Arial, sans-serif" }, color: '#64748B' } }
+  }
+};
+
+/* ── TAB SWITCHING ── */
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('page-' + name).classList.add('active');
+}
+
+/* ══════════════ PAGE 1 CHARTS ══════════════ */
+
+// Readiness horizontal bar
+new Chart(document.getElementById('readinessChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Formal AI Strategy', 'KM Integration', 'Workforce Trained', 'AI Platform Reach', 'Agentic AI Deployed', 'Governance Model'],
+    datasets: [{
+      label: 'Current Readiness %',
+      data: [58, 28, 19, 14, 11, 21],
+      backgroundColor: [green, amber, amber, red, red, amber],
+      borderRadius: 4, borderSkipped: false
+    }]
+  },
+  options: {
+    ...baseOpts,
+    indexAxis: 'y',
+    plugins: { ...baseOpts.plugins, legend: { display: false } },
+    scales: {
+      x: { ...baseOpts.scales.x, max: 100, ticks: { ...baseOpts.scales.x.ticks, callback: v => v + '%' } },
+      y: { ...baseOpts.scales.y, grid: { display: false } }
+    }
+  }
+});
+
+// Adoption donut
+new Chart(document.getElementById('adoptionDonut'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Truly Reimagining (34%)', 'Surface-Level Use (37%)', 'Exploring (20%)', 'Early Stage (9%)'],
+    datasets: [{
+      data: [34, 37, 20, 9],
+      backgroundColor: [green, amber, navyL, slate],
+      borderWidth: 2, borderColor: '#FFFFFF', hoverOffset: 6
+    }]
+  },
+  options: {
+    responsive: true,
+    cutout: '62%',
+    plugins: {
+      legend: { position: 'bottom', labels: { font: { size: 10, family: "'Segoe UI', Arial, sans-serif" }, color: '#1A1F36', boxWidth: 10, padding: 10 } },
+      tooltip: baseOpts.plugins.tooltip
+    }
+  }
+});
+
+// Investment line chart
+new Chart(document.getElementById('investmentLine'), {
+  type: 'line',
+  data: {
+    labels: ['2022', '2023', '2024', '2025'],
+    datasets: [
+      { label: 'Deloitte', data: [0.5, 1.2, 2.5, 4.0], borderColor: green, backgroundColor: 'rgba(0,196,154,0.08)', tension: 0.4, pointRadius: 5, pointBackgroundColor: green, fill: true },
+      { label: 'Accenture', data: [1.0, 2.0, 3.2, 4.0], borderColor: amber, backgroundColor: 'rgba(245,166,35,0.05)', tension: 0.4, pointRadius: 5, pointBackgroundColor: amber, fill: false },
+      { label: 'PwC', data: [0.2, 0.5, 0.8, 1.0], borderColor: navy, backgroundColor: 'transparent', tension: 0.4, pointRadius: 5, pointBackgroundColor: navy, fill: false },
+    ]
+  },
+  options: {
+    ...baseOpts,
+    scales: {
+      x: { ...baseOpts.scales.x },
+      y: { ...baseOpts.scales.y, ticks: { ...baseOpts.scales.y.ticks, callback: v => '$' + v + 'B' } }
+    }
+  }
+});
+
+// Productivity bar
+new Chart(document.getElementById('productivityBar'), {
+  type: 'bar',
+  data: {
+    labels: ['Time Saved\n(Search)', 'Non-Value\nWorkday Back', 'Revenue\nGrowth Uplift', 'EBIT\nImprovement'],
+    datasets: [
+      { label: 'Current Baseline', data: [0, 0, 0, 0], backgroundColor: 'rgba(100,116,139,0.2)', borderRadius: 4 },
+      { label: 'With AI KM System', data: [35, 41, 150, 5], backgroundColor: [green, green, amber, navy], borderRadius: 4 },
+    ]
+  },
+  options: {
+    ...baseOpts,
+    scales: {
+      x: { ...baseOpts.scales.x, stacked: false },
+      y: { ...baseOpts.scales.y, ticks: { ...baseOpts.scales.y.ticks, callback: v => v + '%' } }
+    },
+    plugins: { ...baseOpts.plugins, legend: { display: true } }
+  }
+});
+
+/* ══════════════ PAGE 2 CHARTS ══════════════ */
+
+// Trained employees bar
+new Chart(document.getElementById('trainedBar'), {
+  type: 'bar',
+  data: {
+    labels: ['Deloitte\n(Europe)', 'PwC\n(Global)', 'McKinsey\n(~70%)', 'Accenture\n(Global)'],
+    datasets: [{
+      label: 'Employees Trained in AI (thousands)',
+      data: [75, 200, 210, 550],
+      backgroundColor: [red, amber, green, green],
+      borderRadius: 5, borderSkipped: false
+    }]
+  },
+  options: {
+    ...baseOpts,
+    plugins: { ...baseOpts.plugins, legend: { display: false } },
+    scales: {
+      x: { ...baseOpts.scales.x, grid: { display: false } },
+      y: { ...baseOpts.scales.y, ticks: { ...baseOpts.scales.y.ticks, callback: v => v + 'K' } }
+    }
+  }
+});
+
+// Investment bar
+new Chart(document.getElementById('investBar'), {
+  type: 'bar',
+  data: {
+    labels: ['PwC', 'McKinsey', 'Accenture\n(LearnVantage)', 'Accenture\n(AI Platform)', 'Deloitte'],
+    datasets: [{
+      label: 'AI Investment ($B)',
+      data: [1.0, 1.5, 1.0, 3.0, 4.0],
+      backgroundColor: [navyL, navyL, amber, amber, green],
+      borderRadius: 5, borderSkipped: false
+    }]
+  },
+  options: {
+    ...baseOpts,
+    plugins: { ...baseOpts.plugins, legend: { display: false } },
+    scales: {
+      x: { ...baseOpts.scales.x, grid: { display: false } },
+      y: { ...baseOpts.scales.y, ticks: { ...baseOpts.scales.y.ticks, callback: v => '$' + v + 'B' } }
+    }
+  }
+});
+
+/* ══════════════ PAGE 3 CHARTS ══════════════ */
+
+// Sentiment stacked bar
+new Chart(document.getElementById('sentimentBar'), {
+  type: 'bar',
+  data: {
+    labels: ['Career Growth', 'Brand / Prestige', 'Work-Life Balance', 'Internal Tools', 'Knowledge Sharing', 'AI / Innovation', 'Pay & Benefits'],
+    datasets: [
+      { label: 'Positive', data: [72, 68, 25, 30, 22, 55, 48], backgroundColor: green, borderRadius: 3 },
+      { label: 'Negative', data: [18, 12, 61, 44, 38, 15, 32], backgroundColor: red, borderRadius: 3 },
+      { label: 'Neutral', data: [10, 20, 14, 26, 40, 30, 20], backgroundColor: slate, borderRadius: 3 },
+    ]
+  },
+  options: {
+    ...baseOpts,
+    indexAxis: 'y',
+    plugins: { ...baseOpts.plugins },
+    scales: {
+      x: { ...baseOpts.scales.x, stacked: true, max: 100, ticks: { ...baseOpts.scales.x.ticks, callback: v => v + '%' } },
+      y: { ...baseOpts.scales.y, stacked: true, grid: { display: false } }
+    }
+  }
+});
+
+// Rating line
+new Chart(document.getElementById('ratingLine'), {
+  type: 'line',
+  data: {
+    labels: ['2021', '2022', '2023', '2024', '2025'],
+    datasets: [
+      { label: 'Overall Rating', data: [3.7, 3.8, 3.9, 3.9, 3.9], borderColor: green, backgroundColor: 'rgba(0,196,154,0.08)', tension: 0.3, pointRadius: 5, fill: true },
+      { label: 'Work-Life Balance', data: [3.0, 3.1, 3.2, 3.2, 3.2], borderColor: red, backgroundColor: 'transparent', tension: 0.3, pointRadius: 5 },
+      { label: 'Career Opportunities', data: [3.9, 4.0, 4.1, 4.1, 4.2], borderColor: amber, backgroundColor: 'transparent', tension: 0.3, pointRadius: 5 },
+    ]
+  },
+  options: {
+    ...baseOpts,
+    scales: {
+      x: { ...baseOpts.scales.x },
+      y: { ...baseOpts.scales.y, min: 2.5, max: 5, ticks: { ...baseOpts.scales.y.ticks, stepSize: 0.5 } }
+    }
+  }
+});
+
+// Attrition horizontal bar
+new Chart(document.getElementById('attritionBar'), {
+  type: 'bar',
+  data: {
+    labels: ['Work-Life Balance', 'Limited AI Tools', 'Knowledge Silos', 'Career Clarity', 'Compensation', 'Manager Quality'],
+    datasets: [{
+      label: 'Attrition Risk Weight',
+      data: [82, 61, 54, 48, 43, 37],
+      backgroundColor: [red, amber, amber, navyL, navyL, navyL],
+      borderRadius: 4, borderSkipped: false
+    }]
+  },
+  options: {
+    ...baseOpts,
+    indexAxis: 'y',
+    plugins: { ...baseOpts.plugins, legend: { display: false } },
+    scales: {
+      x: { ...baseOpts.scales.x, max: 100, ticks: { ...baseOpts.scales.x.ticks, callback: v => v + '%' } },
+      y: { ...baseOpts.scales.y, grid: { display: false } }
+    }
+  }
+});
+
+/* ══════════════ PAGE 4 CHARTS ══════════════ */
+
+// Impact bar
+new Chart(document.getElementById('impactBar'), {
+  type: 'bar',
+  data: {
+    labels: ['Phase 1\nPairD Global', 'Phase 2\nKnowledge Hub', 'Phase 3\nLearnAI Unit'],
+    datasets: [
+      { label: 'Time Savings %', data: [15, 35, 50], backgroundColor: green, borderRadius: 4 },
+      { label: 'Workforce Trained %', data: [40, 60, 90], backgroundColor: amber, borderRadius: 4 },
+    ]
+  },
+  options: {
+    ...baseOpts,
+    scales: {
+      x: { ...baseOpts.scales.x, grid: { display: false } },
+      y: { ...baseOpts.scales.y, ticks: { ...baseOpts.scales.y.ticks, callback: v => v + '%' } }
+    }
+  }
+});
+
+// Progress vs competitor
+new Chart(document.getElementById('progressBar'), {
+  type: 'bar',
+  data: {
+    labels: ['Deloitte\nNow', 'Deloitte\nPhase 1', 'Deloitte\nPhase 2', 'Deloitte\nPhase 3\n(Target)', 'PwC\n(Benchmark)', 'Accenture\n(Benchmark)'],
+    datasets: [{
+      label: '% Workforce AI-Trained',
+      data: [19, 40, 60, 90, 51, 71],
+      backgroundColor: [red, amber, amber, green, navyL, navyL],
+      borderRadius: 5, borderSkipped: false
+    }]
+  },
+  options: {
+    ...baseOpts,
+    plugins: { ...baseOpts.plugins, legend: { display: false } },
+    scales: {
+      x: { ...baseOpts.scales.x, grid: { display: false } },
+      y: { ...baseOpts.scales.y, max: 100, ticks: { ...baseOpts.scales.y.ticks, callback: v => v + '%' } }
+    }
+  }
+});
+</script>
+</body>
+</html>
