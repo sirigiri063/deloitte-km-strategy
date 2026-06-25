@@ -2,7 +2,7 @@
 
 <img src="https://img.shields.io/badge/Deloitte-86BC25?style=for-the-badge&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==&logoColor=black" alt="Deloitte" />
 <img src="https://img.shields.io/badge/Independent_Research-000000?style=for-the-badge" alt="Independent Research" />
-<img src="https://img.shields.io/badge/June_2025-86BC25?style=for-the-badge" alt="June 2025" />
+<img src="https://img.shields.io/badge/June_2025-86BC25?style=for-the-badge" alt="June 2026" />
 
 # Enhancing Deloitte's Consultant Productivity
 # Through AI-Powered Knowledge Management
