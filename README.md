@@ -207,7 +207,7 @@ deloitte-km-strategy/
 │
 ├── README.md                               ← You are here
 ├── SOURCES.md                              ← 24 verified live sources
-├── Deloitte_KM_Master_Document.docx        ← STAR method · Resume entry · LinkedIn post
+├── Deloitte_KM_Master_Document.docx        ← STAR method
 │
 ├── presentation/
 │   └── Deloitte_KM_Strategy.pptx          ← 10-slide executive deck
@@ -223,44 +223,6 @@ deloitte-km-strategy/
 └── dashboard/
     └── Deloitte_KM_Dashboard.html          ← Interactive Power BI-style dashboard
 ```
-
----
-
-<div align="center">
-
-## ◆ &nbsp; RESUME ENTRY &nbsp; ◆
-
-</div>
-
-```
-PROJECTS
-────────────────────────────────────────────────────────────────────────────────
-AI-Powered Knowledge Management Strategy | Deloitte (Independent Research Project)
-Self-Initiated · June 2025 · Tools: Microsoft PowerPoint · Excel · Power BI
-
-• Benchmarked Deloitte's AI KM strategy against Accenture (550K trained), PwC (200K,
-  3,000+ use cases), and McKinsey (30% time saved via Lilli) using 24 verified sources
-
-• Conducted SWOT, 5 Whys Root Cause Analysis, and competitor benchmarking across 4 firms
-  using Deloitte's own State of AI research (3,235 leaders · 24 countries)
-
-• Built 3-tier strategic recommendation framework projected to recover 41% of consultant
-  non-value workday and deliver 5%+ EBIT impact by Year 3
-
-• Delivered 10-slide executive deck · Power BI dashboard · 12-page portfolio ·
-  1-page C-suite executive summary — all structured for board-level presentation
-────────────────────────────────────────────────────────────────────────────────
-```
-
----
-
-<div align="center">
-
-## ◆ &nbsp; INTERVIEW ANSWER &nbsp; ◆
-
-</div>
-
-> *"I identified a real business challenge at Deloitte — the underutilisation of AI in knowledge management. I researched Deloitte's own publications, benchmarked Accenture, PwC, and McKinsey using official sources, and built a strategic recommendation framework with a 3-tier roadmap and measurable KPIs. I packaged the findings into an executive PowerPoint deck, a Power BI dashboard, and a one-page C-suite summary. Every statistic is documented. I can walk you through any part of it right now."*
 
 ---
 
