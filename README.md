@@ -274,6 +274,6 @@ Self-Initiated · June 2025 · Tools: Microsoft PowerPoint · Excel · Power BI
 ![Consulting](https://img.shields.io/badge/Consulting_Strategy-86BC25?style=flat-square)
 ![Big4](https://img.shields.io/badge/Big_4_Benchmark-000000?style=flat-square)
 
-**github.com/[your-username]/deloitte-km-strategy**
+**github.com/[sirigiri063]/deloitte-km-strategy**
 
 </div>
