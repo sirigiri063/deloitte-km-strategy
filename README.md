@@ -223,6 +223,21 @@ deloitte-km-strategy/
 └── dashboard/
     └── Deloitte_KM_Dashboard.html          ← Interactive Power BI-style dashboard
 ```
+---
+
+<div align="center">
+
+## ◆ &nbsp; LIVE DASHBOARD &nbsp; ◆
+
+### 🟢 [Click here to view the live interactive dashboard →](https://sirigiri063.github.io/deloitte-km-strategy/dashboard/Deloitte_KM_Dashboard.html)
+
+*Opens directly in your browser — no download needed*
+
+![Dashboard](https://img.shields.io/badge/Live_Dashboard-Click_to_View-86BC25?style=for-the-badge)
+
+</div>
+
+---
 
 ---
 
